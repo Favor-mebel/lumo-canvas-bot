@@ -207,8 +207,9 @@ JTBD — МЕТА КЛІЄНТА:
 async def download_photo(file_path: str, bot_token: str) -> str:
     """Завантажує фото з Telegram і конвертує в base64"""
     url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
-    async with httpx.AsyncClient() as http:
+    async with httpx.AsyncClient(timeout=30.0) as http:
         response = await http.get(url)
+        response.raise_for_status()
         return base64.standard_b64encode(response.content).decode("utf-8")
 
 
