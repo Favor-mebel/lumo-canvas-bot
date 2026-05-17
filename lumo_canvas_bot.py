@@ -204,13 +204,11 @@ JTBD — МЕТА КЛІЄНТА:
 - Завжди називай конкретну суму передоплати"""
 
 
-async def download_photo(file_path: str, bot_token: str) -> str:
+async def download_photo(file_obj, bot_token: str) -> str:
     """Завантажує фото з Telegram і конвертує в base64"""
-    url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
     async with httpx.AsyncClient(timeout=30.0) as http:
-        response = await http.get(url)
-        response.raise_for_status()
-        return base64.standard_b64encode(response.content).decode("utf-8")
+        bio = await file_obj.download_as_bytearray()
+        return base64.standard_b64encode(bytes(bio)).decode("utf-8")
 
 
 async def ask_claude(user_id: int, message_content: list) -> str:
@@ -280,7 +278,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await context.bot.get_file(photo.file_id)
 
         # Завантажуємо і конвертуємо в base64
-        image_data = await download_photo(file.file_path, TELEGRAM_TOKEN)
+        image_data = await download_photo(file, TELEGRAM_TOKEN)
 
         # Формуємо повідомлення з фото для Claude
         content = [
@@ -325,7 +323,7 @@ async def handle_multiple_photos(update: Update, context: ContextTypes.DEFAULT_T
 
         try:
             file = await context.bot.get_file(update.message.document.file_id)
-            image_data = await download_photo(file.file_path, TELEGRAM_TOKEN)
+            image_data = await download_photo(file, TELEGRAM_TOKEN)
 
             mime_type = update.message.document.mime_type
 
