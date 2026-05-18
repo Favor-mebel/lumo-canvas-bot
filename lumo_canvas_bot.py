@@ -357,6 +357,14 @@ async def handle_multiple_photos(update: Update, context: ContextTypes.DEFAULT_T
             reply = await ask_claude(user_id, content)
             await update.message.reply_text(reply)
 
+            # Сповіщення власнику якщо схоже на квитанцію оплати
+            if OWNER_CHAT_ID and any(word in reply.lower() for word in ["оплат", "квитанц", "дякую за скріншот", "480", "успішно надійшли"]):
+                user = update.effective_user
+                name = user.full_name or "Невідомий"
+                username = f"@{user.username}" if user.username else "без username"
+                msg = "💰 НОВА ОПЛАТА!" + "\n\n" + f"Клієнт: {name} ({username})" + "\nID: " + str(user_id) + "\n\nБот відповів:\n" + reply[:300]
+                await context.bot.send_message(chat_id=OWNER_CHAT_ID, text=msg)
+
         except Exception as e:
             logger.error(f"Помилка обробки документу: {e}")
             await update.message.reply_text(
