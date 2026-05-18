@@ -11,6 +11,7 @@ import anthropic
 # ============================================================
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "")
+OWNER_CHAT_ID = os.environ.get("OWNER_CHAT_ID", "")  # Твій Telegram ID для сповіщень
 # ============================================================
 
 logging.basicConfig(level=logging.INFO)
@@ -303,6 +304,17 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         reply = await ask_claude(user_id, content)
         await update.message.reply_text(reply)
+
+        # Сповіщення власнику якщо схоже на квитанцію оплати
+        if OWNER_CHAT_ID and any(word in reply.lower() for word in ["оплат", "квитанц", "дякую за скріншот"]):
+            user = update.effective_user
+            name = user.full_name or "Невідомий"
+            username = f"@{user.username}" if user.username else "без username"
+            msg = f"💰 НОВА ОПЛАТА!" + "\n\n" + f"Клієнт: {name} ({username})" + "\nID: " + str(user_id) + "\n\nБот відповів:\n" + reply[:300]
+            await context.bot.send_message(
+                chat_id=OWNER_CHAT_ID,
+                text=msg
+            )
 
     except Exception as e:
         logger.error(f"Помилка обробки фото: {e}")
