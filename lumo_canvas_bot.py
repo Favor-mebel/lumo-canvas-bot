@@ -239,7 +239,7 @@ async def ask_claude(user_id: int, message_content: list) -> str:
         conversation_history[user_id] = conversation_history[user_id][-20:]
 
     response = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-haiku-4-5-20251001",
         max_tokens=1024,
         system=SYSTEM_PROMPT,
         messages=conversation_history[user_id]
